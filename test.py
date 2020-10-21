@@ -67,7 +67,7 @@ def blob_detect(image,  # -- The frame (cv standard)
         # Filter by Area.
         params.filterByArea = True
         params.minArea = 30
-        params.maxArea = 20000
+        params.maxArea = 200000
 
         # Filter by Circularity
         params.filterByCircularity = True
@@ -224,8 +224,8 @@ def get_blob_relative_position(image, keyPoint):
 if __name__ == "__main__":
 
     # --- Define HSV limits
-    blue_min = (23, 61, 217)
-    blue_max = (54, 255, 255)
+    blue_min = (0, 173, 171)
+    blue_max = (7, 255, 255)
 
 
     # --- Define area limit [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     SOURCE = 'video'
 
     if SOURCE == 'video':
-        cap = cv2.VideoCapture("minigolf.mp4")
+        cap = cv2.VideoCapture("test.mov")
         while (True):
             # Capture frame-by-frame
             ret, frame = cap.read()
