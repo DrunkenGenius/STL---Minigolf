@@ -112,6 +112,24 @@ def draw_keypoints(image,  # -- Input image
     im_with_keypoints = cv2.drawKeypoints(image, keypoints, np.array([]), line_color,
                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
+
+    #print(keypoints)
+    #keypoints[0].pt
+    if keypoints:
+        print(keypoints[0].pt)
+        x = int(keypoints[0].pt[0])
+        y = int(keypoints[0].pt[1])
+        goalStartX, goalStartY = 400,150
+        goalEndX, goalEndY =550, 220
+        string = "x: " + str(x) + "y: " + str(y)
+        cv2.putText(im_with_keypoints, string, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+        cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
+        if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
+            print("GOAL!!!! YAAY")
+            time.sleep(1/15)
+
+
+
     if imshow:
         # Show keypoints
         cv2.imshow("Keypoints", im_with_keypoints)
