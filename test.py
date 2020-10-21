@@ -1,5 +1,6 @@
 import cv2
 import numpy as np;
+import time
 
 
 # ---------- Blob detecting function: returns keypoints and mask
@@ -103,7 +104,7 @@ def blob_detect(image,  # -- The frame (cv standard)
 # -- return(im_with_keypoints)
 def draw_keypoints(image,  # -- Input image
                    keypoints,  # -- CV keypoints
-                   line_color=(0, 0, 255),  # -- line's color (b,g,r)
+                   line_color=(255, 0, 0),  # -- line's color (b,g,r)
                    imshow=False  # -- show the result
                    ):
     # -- Draw detected blobs as red circles.
@@ -241,14 +242,16 @@ if __name__ == "__main__":
             # Capture frame-by-frame
             ret, frame = cap.read()
 
+            frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*30/100),int(frame.shape[0]*30/100)))
+
             # -- Detect keypoints
-            keypoints, _ = blob_detect(frame, blue_min, blue_max, blur=3,
+            keypoints, _ = blob_detect(frameResize, blue_min, blue_max, blur=3,
                                        blob_params=None, search_window=window, imshow=False)
             # -- Draw search window
-            frame = draw_window(frame, window)
+            frameResize = draw_window(frameResize, window)
 
             # -- click ENTER on the image window to proceed
-            draw_keypoints(frame, keypoints, imshow=True)
+            draw_keypoints(frameResize, keypoints, imshow=True)
 
             # -- press q to quit
             if cv2.waitKey(1) & 0xFF == ord('q'):
