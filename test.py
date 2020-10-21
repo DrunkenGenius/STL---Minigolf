@@ -224,8 +224,9 @@ def get_blob_relative_position(image, keyPoint):
 if __name__ == "__main__":
 
     # --- Define HSV limits
-    blue_min = (3, 159, 168)
-    blue_max = (24, 213, 255)
+    blue_min = (23, 61, 217)
+    blue_max = (54, 255, 255)
+
 
     # --- Define area limit [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
     window = [0, 0, 1, 1]
