@@ -1,7 +1,16 @@
 import cv2
 import numpy as np;
 import time
+import math
 
+x=0
+y=0
+
+prevX=0
+prevY=0
+
+prevFrameTime = time.time()
+currentTime = 0
 
 # ---------- Blob detecting function: returns keypoints and mask
 # -- return keypoints, reversemask
@@ -111,22 +120,40 @@ def draw_keypoints(image,  # -- Input image
     # -- cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
     im_with_keypoints = cv2.drawKeypoints(image, keypoints, np.array([]), line_color,
                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    #Til at beregne velocity
+    global x,y
+    global prevX, prevY
+    #Til at beregne tid siden foregående frame altså deltaTime
+    global prevFrameTime
+    global currentTime
 
 
-    #print(keypoints)
-    #keypoints[0].pt
+    #Sætter keypoints positions hvis der er nogen keypoints(altså den har detected en blob)
     if keypoints:
         print(keypoints[0].pt)
-        x = int(keypoints[0].pt[0])
-        y = int(keypoints[0].pt[1])
-        goalStartX, goalStartY = 400,150
-        goalEndX, goalEndY =550, 220
-        string = "x: " + str(x) + "y: " + str(y)
-        cv2.putText(im_with_keypoints, string, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
-        cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
-        if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
-            print("GOAL!!!! YAAY")
-            time.sleep(1/15)
+        x = keypoints[0].pt[0]
+        y = keypoints[0].pt[1]
+
+    #Her regnes deltaTime og prevFrameTime bliver sat
+    currentTime = time.time()
+    deltaTime = currentTime - prevFrameTime
+    prevFrameTime = currentTime
+
+    #Her regnes distancen blob har bevæget sig siden forrige frame
+    dist = math.sqrt((prevX - x) ** 2 + (prevY - y) ** 2)
+    prevX, prevY = x,y
+
+    #Start og slutpunkt for mål rektanglet på banen
+    goalStartX, goalStartY = 400,150
+    goalEndX, goalEndY =550, 220
+    #Tekst med position og velocity af bold
+    string = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(dist)
+    cv2.putText(im_with_keypoints, string, (50,300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 2, cv2.LINE_AA)
+    cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
+    #Hvis bolden er i målkassen
+    if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
+        print("GOAL!!!! YAAY")
+        time.sleep(1/15)
 
 
 
