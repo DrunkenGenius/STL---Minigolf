@@ -2,6 +2,9 @@ import cv2
 import numpy as np;
 import time
 import math
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+import keyboard
 
 x=0
 y=0
@@ -11,6 +14,16 @@ prevY=0
 
 prevFrameTime = time.time()
 currentTime = 0
+
+posX = []
+posY = []
+
+isMoving = False
+shots = 0
+
+maxVel = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+
+
 
 # ---------- Blob detecting function: returns keypoints and mask
 # -- return keypoints, reversemask
@@ -127,12 +140,19 @@ def draw_keypoints(image,  # -- Input image
     global prevFrameTime
     global currentTime
 
+    global isMoving
+    global shots
+
+    global maxVel
+
 
     #Sætter keypoints positions hvis der er nogen keypoints(altså den har detected en blob)
     if keypoints:
-        print(keypoints[0].pt)
         x = keypoints[0].pt[0]
         y = keypoints[0].pt[1]
+        calculateShots(x,y)
+    else:
+        calculateShots(x, y)
 
     #Her regnes deltaTime og prevFrameTime bliver sat
     currentTime = time.time()
@@ -140,20 +160,32 @@ def draw_keypoints(image,  # -- Input image
     prevFrameTime = currentTime
 
     #Her regnes distancen blob har bevæget sig siden forrige frame
-    dist = math.sqrt((prevX - x) ** 2 + (prevY - y) ** 2)
+    speed = math.sqrt((prevX - x) ** 2 + (prevY - y) ** 2)
+    np.append(maxVel, speed)
+    maxVel = savgol_filter(maxVel, 11, 4)
     prevX, prevY = x,y
+
+    if 2.5<speed < 20:
+        isMoving = True
+
+    if speed < 1 and isMoving and speed != 0:
+        shots = shots + 1
+        isMoving = False
+
+    if keyboard.is_pressed('r'):
+        shots = 0
 
     #Start og slutpunkt for mål rektanglet på banen
     goalStartX, goalStartY = 400,150
     goalEndX, goalEndY =550, 220
     #Tekst med position og velocity af bold
-    string = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(dist)
+    string = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(speed)
     cv2.putText(im_with_keypoints, string, (50,300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 2, cv2.LINE_AA)
+    cv2.putText(im_with_keypoints, "Shots: " +  str(shots), (50, 250), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2, cv2.LINE_AA)
     cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
     #Hvis bolden er i målkassen
     if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
-        print("GOAL!!!! YAAY")
-        time.sleep(1/15)
+        print("GOAL")
 
 
 
@@ -162,6 +194,26 @@ def draw_keypoints(image,  # -- Input image
         cv2.imshow("Keypoints", im_with_keypoints)
 
     return (im_with_keypoints)
+
+
+def calculateShots(x,y):
+    #Lav array af positioner Man laver altid numpy array med korrekt størrelse(np.zero([n_frames])) udenfor for loop og "appender" med Array[Indeks], hvor Indeks f.eks er frame number. Np.append er mega langsom. Selv i real tid skal man bare allokere et stort array i hukommelsen, f.eks hvert minut
+    global posX, posY
+    posX.append(x)
+    posY.append(y)
+
+    # før du laver gradient på x og y array skal du lige bruge scipy filter for at fjerne outliers
+
+    # gør position smooth
+    #antal_frames = 11  # hvor mange frames der smoothes over
+    #dfX = savgol_filter(posX, antal_frames, 4)
+    #dfY = savgol_filter(posY, antal_frames, 4)
+
+    # Lav gradient
+    #V_x = np.gradient(dfX)
+    #V_y = np.gradient(dfY)
+
+
 
 
 # ---------- Draw search window: returns the image
@@ -268,6 +320,7 @@ def get_blob_relative_position(image, keyPoint):
 
 # ----------- TEST
 if __name__ == "__main__":
+    globals()
 
     # --- Define HSV limits
     blue_min = (0, 173, 171)
