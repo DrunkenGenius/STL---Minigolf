@@ -22,6 +22,7 @@ posY = []
 
 isMoving = False
 shots = 0
+OB = False
 
 maxVel = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
@@ -144,8 +145,10 @@ def draw_keypoints(image,  # -- Input image
 
     global isMoving
     global shots
+    global OB
 
     global maxVel
+    
 
 
     #Sætter keypoints positions hvis der er nogen keypoints(altså den har detected en blob)
@@ -188,7 +191,22 @@ def draw_keypoints(image,  # -- Input image
     #Hvis bolden er i målkassen
     if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
         print("GOAL YAY")
-
+    
+    goalStartX, goalStartY = 200,200
+    goalEndX, goalEndY =1000, 600
+    cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (0,255,0), 2)
+    
+    if (x<goalStartX or goalEndX<x or y<goalStartY or goalEndY<y) and OB == False:
+        print("OB")
+        OB = True
+        shots = shots +1
+     
+        
+        
+    if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
+        print("In Bounds")
+        OB = False
+        
 
 
     if imshow:
