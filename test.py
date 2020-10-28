@@ -178,8 +178,8 @@ def draw_keypoints(image,  # -- Input image
         shots = 0
 
     #Start og slutpunkt for mål rektanglet på banen
-    goalStartX, goalStartY = 400,150
-    goalEndX, goalEndY =550, 220
+    goalStartX, goalStartY = 1050,370
+    goalEndX, goalEndY =1100, 420
     #Tekst med position og velocity af bold
     string = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(speed)
     cv2.putText(im_with_keypoints, string, (50,300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 2, cv2.LINE_AA)
