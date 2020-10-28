@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 import keyboard
 
+#adasasdas
+
 x=0
 y=0
 
@@ -185,7 +187,7 @@ def draw_keypoints(image,  # -- Input image
     cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
     #Hvis bolden er i målkassen
     if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
-        print("GOAL")
+        print("GOAL YAY")
 
 
 
@@ -323,9 +325,15 @@ if __name__ == "__main__":
     globals()
 
     # --- Define HSV limits
-    blue_min = (0, 173, 171)
-    blue_max = (7, 255, 255)
-
+    blue_min = (0, 178, 145)
+    blue_max = (183, 255, 255)
+    #nye værdier
+     #0,162,117
+    #110,218,255
+    
+    #De gamle værdier til den gamle video
+    #blue_min = (0, 173, 171)
+    #blue_max = (7, 255, 255)
 
     # --- Define area limit [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
     window = [0, 0, 1, 1]
@@ -335,12 +343,12 @@ if __name__ == "__main__":
     SOURCE = 'video'
 
     if SOURCE == 'video':
-        cap = cv2.VideoCapture("test.mov")
+        cap = cv2.VideoCapture("nyVideoMedStilleKamera.mov")
         while (True):
             # Capture frame-by-frame
             ret, frame = cap.read()
 
-            frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*30/100),int(frame.shape[0]*30/100)))
+            frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*90/100),int(frame.shape[0]*90/100)))
 
             # -- Detect keypoints
             keypoints, _ = blob_detect(frameResize, blue_min, blue_max, blur=3,
