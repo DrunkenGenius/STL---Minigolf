@@ -318,10 +318,16 @@ def draw_frame(image,
 def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
     rows = image.shape[0]
     cols = image.shape[1]
-    x_min_px = int(cols * window_adim[0])
-    y_min_px = int(rows * window_adim[1])
-    x_max_px = int(cols * window_adim[2])
-    y_max_px = int(rows * window_adim[3])
+
+    searchMinX = 200
+    searchMinY = 250
+    searchMaxX = 1200
+    searchMaxY = 600
+
+    x_min_px = searchMinX
+    y_min_px = searchMinY
+    x_max_px = searchMaxX
+    y_max_px = searchMaxY
 
     # --- Initialize the mask as a black image
     mask = np.zeros(image.shape, np.uint8)
