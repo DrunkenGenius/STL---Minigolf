@@ -13,6 +13,8 @@ y=0
 
 prevX=0
 prevY=0
+StartX=229
+StartY=418
 
 prevFrameTime = time.time()
 currentTime = 0
@@ -146,6 +148,8 @@ def draw_keypoints(image,  # -- Input image
     global isMoving
     global shots
     global OB
+    global StartX 
+    global StartY 
 
     global maxVel
     
@@ -170,21 +174,11 @@ def draw_keypoints(image,  # -- Input image
     maxVel = savgol_filter(maxVel, 11, 4)
     prevX, prevY = x,y
 
-    if 2.5<speed < 20:
-        isMoving = True
-
-    if speed < 1 and isMoving and speed != 0:
-        shots = shots + 1
-        isMoving = False
-
-    if keyboard.is_pressed('r'):
-        shots = 0
-
     #Start og slutpunkt for mål rektanglet på banen
     goalStartX, goalStartY = 1050,370
     goalEndX, goalEndY =1100, 420
     #Tekst med position og velocity af bold
-    string = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(speed)
+    string = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(round(speed,2))
     cv2.putText(im_with_keypoints, string, (50,300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 2, cv2.LINE_AA)
     cv2.putText(im_with_keypoints, "Shots: " +  str(shots), (50, 250), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2, cv2.LINE_AA)
     cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
@@ -192,29 +186,64 @@ def draw_keypoints(image,  # -- Input image
     if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
         print("GOAL YAY")
     
-    goalStartX, goalStartY = 200,200
-    goalEndX, goalEndY =1000, 600
-    cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (0,255,0), 2)
     
-    if (x<goalStartX or goalEndX<x or y<goalStartY or goalEndY<y) and OB == False:
-        print("OB")
-        OB = True
-        shots = shots +1
-     
+    #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB. med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
+    ydreStartX, ydreStartY = 200,250
+    #ydreEndX værdi == 1000, hvis man vil teste OB
+    ydreEndX, ydreEndY =1200, 600
+    cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
+    
         
+    if keyboard.is_pressed('r'):
+        shots = 0
         
-    if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
-        print("In Bounds")
-        OB = False
+        #Virker ikke som det skal, den detecter pludseligt random ting uden for grænsen... tror dog stadigvæk ideen virker:"gradient" skal bare virke først
+    #if (x<ydreStartX or ydreEndX<x or y<ydreStartY or ydreEndY<y) and OB == False:
+       # print("OB")
+        #OB = True
+        #shots = shots +2
         
-
-
+    #if ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
+     #   print("In Bounds")
+      #  OB = False
+    
+    if 2.5<speed < 20:
+            isMoving = True
+            
+            
+    
+        
+            #Behøves speed!= 0? her tjekkes om bolden er inden for rammerne og speed er under 1
+    if speed < 1 and isMoving and speed != 0 and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
+            print("In Bounds")
+            OB = False
+            #finder forige gange den lå stille og trækker det fra dens nuværende position, hvis den har flyttet sig mere end "x"px, så skal den tælle det som et skud
+            if keypoints:
+                x = keypoints[0].pt[0]
+                y = keypoints[0].pt[1]
+                print("x:"+str(x))
+                print("y:"+str(y))
+                calculateShots(x,y)
+                if abs(x)-abs(StartX)>10 or abs(y)-abs(StartY)>10:
+                    shots = shots + 1
+                    isMoving = False 
+                    StartX = x
+                    StartY = y
+                else:
+                    isMoving = False
+                     # calculateShots(x, y)
+           
+              
+                
+        
+    #Ydre kasseslut    
+        
     if imshow:
         # Show keypoints
         cv2.imshow("Keypoints", im_with_keypoints)
 
     return (im_with_keypoints)
-
+ 
 
 def calculateShots(x,y):
     #Lav array af positioner Man laver altid numpy array med korrekt størrelse(np.zero([n_frames])) udenfor for loop og "appender" med Array[Indeks], hvor Indeks f.eks er frame number. Np.append er mega langsom. Selv i real tid skal man bare allokere et stort array i hukommelsen, f.eks hvert minut
