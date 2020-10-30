@@ -214,7 +214,7 @@ def draw_keypoints(image,  # -- Input image
     
         
             #Behøves speed!= 0? her tjekkes om bolden er inden for rammerne og speed er under 1
-    if speed < 1 and isMoving and speed != 0 and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
+    if speed < 1 and isMoving and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
             print("In Bounds")
             OB = False
             #finder forige gange den lå stille og trækker det fra dens nuværende position, hvis den har flyttet sig mere end "x"px, så skal den tælle det som et skud
@@ -223,8 +223,9 @@ def draw_keypoints(image,  # -- Input image
                 y = keypoints[0].pt[1]
                 print("x:"+str(x))
                 print("y:"+str(y))
-                calculateShots(x,y)
-                if abs(x)-abs(StartX)>10 or abs(y)-abs(StartY)>10:
+                #calculateShots(x,y)
+                #vector3 and magnitude
+                if abs(x-StartX)>50 or abs(y-StartY)>50:
                     shots = shots + 1
                     isMoving = False 
                     StartX = x

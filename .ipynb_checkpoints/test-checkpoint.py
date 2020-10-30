@@ -214,7 +214,7 @@ def draw_keypoints(image,  # -- Input image
     
         
             #Behøves speed!= 0? her tjekkes om bolden er inden for rammerne og speed er under 1
-    if speed < 1 and isMoving and speed != 0 and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
+    if speed < 1 and isMoving and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
             print("In Bounds")
             OB = False
             #finder forige gange den lå stille og trækker det fra dens nuværende position, hvis den har flyttet sig mere end "x"px, så skal den tælle det som et skud
@@ -223,8 +223,9 @@ def draw_keypoints(image,  # -- Input image
                 y = keypoints[0].pt[1]
                 print("x:"+str(x))
                 print("y:"+str(y))
-                calculateShots(x,y)
-                if abs(x)-abs(StartX)>10 or abs(y)-abs(StartY)>10:
+                #calculateShots(x,y)
+                #vector3 and magnitude
+                if abs(x-StartX)>50 or abs(y-StartY)>50:
                     shots = shots + 1
                     isMoving = False 
                     StartX = x
@@ -318,10 +319,16 @@ def draw_frame(image,
 def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
     rows = image.shape[0]
     cols = image.shape[1]
-    x_min_px = int(cols * window_adim[0])
-    y_min_px = int(rows * window_adim[1])
-    x_max_px = int(cols * window_adim[2])
-    y_max_px = int(rows * window_adim[3])
+
+    searchMinX = 200
+    searchMinY = 250
+    searchMaxX = 1200
+    searchMaxY = 600
+
+    x_min_px = searchMinX
+    y_min_px = searchMinY
+    x_max_px = searchMaxX
+    y_max_px = searchMaxY
 
     # --- Initialize the mask as a black image
     mask = np.zeros(image.shape, np.uint8)
