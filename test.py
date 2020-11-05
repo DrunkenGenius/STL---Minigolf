@@ -13,8 +13,11 @@ y=0
 
 prevX=0
 prevY=0
-StartX=229
-StartY=418
+#gamle værdier
+#StartX=229
+#StartY=418
+StartX=900
+StartY=650
 
 prevFrameTime = time.time()
 currentTime = 0
@@ -37,6 +40,8 @@ def blob_detect(image,  # -- The frame (cv standard)
                 hsv_max,  # -- maximum threshold of the hsv filter [h_max, s_max, v_max]
                 blur=0,  # -- blur value (default 0)
                 blob_params=None,  # -- blob parameters (default None)
+                
+                #Måske finde alt inden for en meget lille og lukket position omkring bolden
                 search_window=None,
                 # -- window where to search as [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
                 imshow=False
@@ -94,19 +99,28 @@ def blob_detect(image,  # -- The frame (cv standard)
 
         # Filter by Area.
         params.filterByArea = True
-        params.minArea = 30
-        params.maxArea = 200000
+        #det som virker på den gamle
+        #params.minArea = 30
+        #params.maxArea = 20000
+        params.minArea = 20
+        params.maxArea = 200
 
         # Filter by Circularity
         params.filterByCircularity = True
-        params.minCircularity = 0.1
+        #Det gamle
+        #params.minCircularity = 0.1
+        params.minCircularity = 0.6
 
         # Filter by Convexity
         params.filterByConvexity = True
-        params.minConvexity = 0.5
+        params.minConvexity = 0.9
+        #det gamle
+        #params.minConvexity = 0.5
 
         # Filter by Inertia
         params.filterByInertia = True
+        #det gamle
+        #params.minInertiaRatio = 0.5
         params.minInertiaRatio = 0.5
 
     else:
@@ -188,9 +202,13 @@ def draw_keypoints(image,  # -- Input image
     
     
     #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB. med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
-    ydreStartX, ydreStartY = 200,250
+    #den gamle der virker
+    #ydreStartX, ydreStartY = 200,250    
+    ydreStartX, ydreStartY = 70,500
     #ydreEndX værdi == 1000, hvis man vil teste OB
-    ydreEndX, ydreEndY =1200, 600
+    #den gamle der virker
+    #ydreEndX, ydreEndY =1200, 600
+    ydreEndX, ydreEndY =950, 700
     cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
     
         
@@ -320,10 +338,15 @@ def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
     rows = image.shape[0]
     cols = image.shape[1]
 
-    searchMinX = 200
-    searchMinY = 250
-    searchMaxX = 1200
-    searchMaxY = 600
+    searchMinX = 70
+    searchMinY = 500
+    searchMaxX = 950
+    searchMaxY = 700
+    
+    #searchMinX = 200
+    #searchMinY = 250
+    #searchMaxX = 1200
+    #searchMaxY = 600
 
     x_min_px = searchMinX
     y_min_px = searchMinY
@@ -379,8 +402,12 @@ if __name__ == "__main__":
     globals()
 
     # --- Define HSV limits
-    blue_min = (0, 178, 145)
-    blue_max = (183, 255, 255)
+    blue_min = (51, 93, 65)
+    blue_max = (58, 166, 124)
+    
+    # værdier der virker på video i vores lab
+    #blue_min = (0, 178, 145)
+    #blue_max = (183, 255, 255)
     #nye værdier
      #0,162,117
     #110,218,255
@@ -397,12 +424,17 @@ if __name__ == "__main__":
     SOURCE = 'video'
 
     if SOURCE == 'video':
-        cap = cv2.VideoCapture("nyVideoMedStilleKamera.mov")
+        #den der virker i vores "lab"
+        #cap = cv2.VideoCapture("nyVideoMedStilleKamera.mov") 
+        cap = cv2.VideoCapture("NormaltForsøg1.mp4")
         while (True):
             # Capture frame-by-frame
             ret, frame = cap.read()
 
-            frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*90/100),int(frame.shape[0]*90/100)))
+            
+            frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*1.5),int(frame.shape[0]*1.5)))
+            #den der virker på den gamle video
+            #frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*90/100),int(frame.shape[0]*90/100)))
 
             # -- Detect keypoints
             keypoints, _ = blob_detect(frameResize, blue_min, blue_max, blur=3,
