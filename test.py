@@ -202,13 +202,24 @@ def draw_keypoints(image,  # -- Input image
     
     
     #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB. med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
+    
     #den gamle der virker
-    #ydreStartX, ydreStartY = 200,250    
-    ydreStartX, ydreStartY = 70,500
+    #ydreStartX, ydreStartY = 200,250  
+    
+    
+    
+    #bowlnFun
+    #ydreStartX, ydreStartY = 70,500
+    
     #ydreEndX værdi == 1000, hvis man vil teste OB
     #den gamle der virker
     #ydreEndX, ydreEndY =1200, 600
-    ydreEndX, ydreEndY =950, 700
+    
+    #bowlnFun
+    #ydreEndX, ydreEndY =950, 700
+    
+    ydreStartX, ydreStartY = round(x-25),round(y-25)  
+    ydreEndX, ydreEndY =round(x+25), round(y+25)
     cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
     
         
@@ -228,7 +239,7 @@ def draw_keypoints(image,  # -- Input image
     if 2.5<speed < 20:
             isMoving = True
             
-            
+             
     
         
             #Behøves speed!= 0? her tjekkes om bolden er inden for rammerne og speed er under 1
@@ -334,10 +345,33 @@ def draw_frame(image,
 
 # ---------- Apply search window: returns the image
 # -- return(image)
-def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
+def apply_search_window(image ,window_adim=[0.0, 0.0, 1.0, 1.0]):
     rows = image.shape[0]
     cols = image.shape[1]
-
+    
+    #if StartX==900 and StartY==650:
+     #   x = keypoints[0].pt[0]
+      #  y = keypoints[0].pt[1]
+       # print("x"+x)
+        #print("y"+y)
+        #searchMinX = round(x-25)
+        #searchMinY = round(y-25)
+        #searchMaxX = round(x+25)
+        #searchMaxY = round(y+25)
+    #else:
+     #   x = keypoints[0].pt[0]
+      #  y = keypoints[0].pt[1]
+       # print("x"+x)
+        #print("y"+y)
+        #searchMinX = round(x-25)
+        #searchMinY = round(y-25)
+        #searchMaxX = round(x+25)
+        #searchMaxY = round(y+25)
+        
+        
+        
+    
+    
     searchMinX = 70
     searchMinY = 500
     searchMaxX = 950
