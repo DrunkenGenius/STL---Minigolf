@@ -11,13 +11,14 @@ import keyboard
 x=0
 y=0
 
-prevX=0
-prevY=0
+
 #gamle værdier
 #StartX=229
 #StartY=418
 StartX=900
 StartY=650
+prevX=StartX
+prevY=StartY
 
 prevFrameTime = time.time()
 currentTime = 0
@@ -28,6 +29,8 @@ posY = []
 isMoving = False
 shots = 0
 OB = False
+toggleFirkant = False
+
 
 maxVel = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
@@ -75,6 +78,7 @@ def blob_detect(image,  # -- The frame (cv standard)
         cv2.waitKey(0)
 
     mask = cv2.erode(mask, None, iterations=2)
+    
 
     # - Show dilate/erode mask
     if imshow:
@@ -164,7 +168,7 @@ def draw_keypoints(image,  # -- Input image
     global OB
     global StartX 
     global StartY 
-
+    
     global maxVel
     
 
@@ -345,37 +349,36 @@ def draw_frame(image,
 
 # ---------- Apply search window: returns the image
 # -- return(image)
-def apply_search_window(image ,window_adim=[0.0, 0.0, 1.0, 1.0]):
+
+def apply_search_window(image,window_adim=[0.0, 0.0, 1.0, 1.0]):
     rows = image.shape[0]
     cols = image.shape[1]
     
-    #if StartX==900 and StartY==650:
-     #   x = keypoints[0].pt[0]
-      #  y = keypoints[0].pt[1]
-       # print("x"+x)
-        #print("y"+y)
-        #searchMinX = round(x-25)
-        #searchMinY = round(y-25)
-        #searchMaxX = round(x+25)
-        #searchMaxY = round(y+25)
-    #else:
-     #   x = keypoints[0].pt[0]
-      #  y = keypoints[0].pt[1]
-       # print("x"+x)
-        #print("y"+y)
-        #searchMinX = round(x-25)
-        #searchMinY = round(y-25)
-        #searchMaxX = round(x+25)
-        #searchMaxY = round(y+25)
+#     im_with_keypoints = cv2.drawKeypoints(image, np.array([]), line_color,
+#                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    
+    global toggleFirkant
+    print(x)
+    if StartX==900 and StartY==650 and toggleFirkant == False:
+        toggleFirkant = True
+        searchMinX = round(StartX-50)
+        searchMinY = round(StartY-50)
+        searchMaxX = round(StartX+50)
+        searchMaxY = round(StartY+50)
+    else:
+        searchMinX = round(prevX-25)
+        searchMinY = round(prevY-25)
+        searchMaxX = round(prevX+25)
+        searchMaxY = round(prevY+25)
         
         
         
     
     
-    searchMinX = 70
-    searchMinY = 500
-    searchMaxX = 950
-    searchMaxY = 700
+#     searchMinX = 70
+#     searchMinY = 500
+#     searchMaxX = 950
+#     searchMaxY = 700
     
     #searchMinX = 200
     #searchMinY = 250
