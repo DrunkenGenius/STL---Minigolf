@@ -2,7 +2,6 @@ import cv2
 import numpy as np;
 import time
 import math
-import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 import keyboard
 
@@ -173,18 +172,10 @@ def draw_keypoints(image,  # -- Input image
     if keypoints:
         x = keypoints[0].pt[0]
         y = keypoints[0].pt[1]
-        calculateShots(x,y)
-    else:
-        calculateShots(x, y)
 
-    #Her regnes deltaTime og prevFrameTime bliver sat
-    currentTime = time.time()
-    deltaTime = currentTime - prevFrameTime
-    prevFrameTime = currentTime
 
     #Her regnes distancen blob har bevæget sig siden forrige frame
     speed = math.sqrt((prevX - x) ** 2 + (prevY - y) ** 2)
-    np.append(maxVel, speed)
     maxVel = savgol_filter(maxVel, 11, 4)
     prevX, prevY = x,y
 
@@ -274,26 +265,6 @@ def draw_keypoints(image,  # -- Input image
 
     return (im_with_keypoints)
  
-
-def calculateShots(x,y):
-    #Lav array af positioner Man laver altid numpy array med korrekt størrelse(np.zero([n_frames])) udenfor for loop og "appender" med Array[Indeks], hvor Indeks f.eks er frame number. Np.append er mega langsom. Selv i real tid skal man bare allokere et stort array i hukommelsen, f.eks hvert minut
-    global posX, posY
-    posX.append(x)
-    posY.append(y)
-
-    # før du laver gradient på x og y array skal du lige bruge scipy filter for at fjerne outliers
-
-    # gør position smooth
-    #antal_frames = 11  # hvor mange frames der smoothes over
-    #dfX = savgol_filter(posX, antal_frames, 4)
-    #dfY = savgol_filter(posY, antal_frames, 4)
-
-    # Lav gradient
-    #V_x = np.gradient(dfX)
-    #V_y = np.gradient(dfY)
-
-
-
 
 # ---------- Draw search window: returns the image
 # -- return(image)
