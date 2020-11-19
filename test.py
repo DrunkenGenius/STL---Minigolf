@@ -2,6 +2,7 @@ import cv2
 import numpy as np;
 import time
 import math
+import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 import keyboard
 
@@ -10,14 +11,10 @@ import keyboard
 x=0
 y=0
 
-
-#gamle værdier
-#StartX=229
-#StartY=418
-StartX=900
-StartY=650
-prevX=StartX
-prevY=StartY
+prevX=0
+prevY=0
+StartX=229
+StartY=418
 
 prevFrameTime = time.time()
 currentTime = 0
@@ -28,8 +25,6 @@ posY = []
 isMoving = False
 shots = 0
 OB = False
-toggleFirkant = False
-
 
 maxVel = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
@@ -42,8 +37,6 @@ def blob_detect(image,  # -- The frame (cv standard)
                 hsv_max,  # -- maximum threshold of the hsv filter [h_max, s_max, v_max]
                 blur=0,  # -- blur value (default 0)
                 blob_params=None,  # -- blob parameters (default None)
-                
-                #Måske finde alt inden for en meget lille og lukket position omkring bolden
                 search_window=None,
                 # -- window where to search as [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
                 imshow=False
@@ -77,7 +70,6 @@ def blob_detect(image,  # -- The frame (cv standard)
         cv2.waitKey(0)
 
     mask = cv2.erode(mask, None, iterations=2)
-    
 
     # - Show dilate/erode mask
     if imshow:
@@ -102,28 +94,19 @@ def blob_detect(image,  # -- The frame (cv standard)
 
         # Filter by Area.
         params.filterByArea = True
-        #det som virker på den gamle
-        #params.minArea = 30
-        #params.maxArea = 20000
-        params.minArea = 20
-        params.maxArea = 200
+        params.minArea = 30
+        params.maxArea = 200000
 
         # Filter by Circularity
         params.filterByCircularity = True
-        #Det gamle
-        #params.minCircularity = 0.1
-        params.minCircularity = 0.6
+        params.minCircularity = 0.1
 
         # Filter by Convexity
         params.filterByConvexity = True
-        params.minConvexity = 0.9
-        #det gamle
-        #params.minConvexity = 0.5
+        params.minConvexity = 0.5
 
         # Filter by Inertia
         params.filterByInertia = True
-        #det gamle
-        #params.minInertiaRatio = 0.5
         params.minInertiaRatio = 0.5
 
     else:
@@ -167,8 +150,10 @@ def draw_keypoints(image,  # -- Input image
     global OB
     global StartX 
     global StartY 
-    
+
     global maxVel
+    
+    minMoveDistance = 20
     
 
 
@@ -176,10 +161,18 @@ def draw_keypoints(image,  # -- Input image
     if keypoints:
         x = keypoints[0].pt[0]
         y = keypoints[0].pt[1]
+        calculateShots(x,y)
+    else:
+        calculateShots(x, y)
 
+    #Her regnes deltaTime og prevFrameTime bliver sat
+    currentTime = time.time()
+    deltaTime = currentTime - prevFrameTime
+    prevFrameTime = currentTime
 
     #Her regnes distancen blob har bevæget sig siden forrige frame
     speed = math.sqrt((prevX - x) ** 2 + (prevY - y) ** 2)
+    np.append(maxVel, speed)
     maxVel = savgol_filter(maxVel, 11, 4)
     prevX, prevY = x,y
 
@@ -195,26 +188,12 @@ def draw_keypoints(image,  # -- Input image
     if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
         print("GOAL YAY")
     
+    # grøn firkant der viser hvor det detektes    searchMinX = 0
     
-    #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB. med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
-    
-    #den gamle der virker
-    #ydreStartX, ydreStartY = 200,250  
-    
-    
-    
-    #bowlnFun
-    #ydreStartX, ydreStartY = 70,500
-    
+    #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB(Out of Bounds) med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
+    ydreStartX, ydreStartY = 10,10
     #ydreEndX værdi == 1000, hvis man vil teste OB
-    #den gamle der virker
-    #ydreEndX, ydreEndY =1200, 600
-    
-    #bowlnFun
-    #ydreEndX, ydreEndY =950, 700
-    
-    ydreStartX, ydreStartY = round(x-25),round(y-25)  
-    ydreEndX, ydreEndY =round(x+25), round(y+25)
+    ydreEndX, ydreEndY =1260, 700
     cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
     
         
@@ -231,10 +210,10 @@ def draw_keypoints(image,  # -- Input image
      #   print("In Bounds")
       #  OB = False
     
-    if 2.5<speed < 20:
+    if 1.5<speed < 20:
             isMoving = True
             
-             
+            
     
         
             #Behøves speed!= 0? her tjekkes om bolden er inden for rammerne og speed er under 1
@@ -249,7 +228,7 @@ def draw_keypoints(image,  # -- Input image
                 print("y:"+str(y))
                 #calculateShots(x,y)
                 #vector3 and magnitude
-                if abs(x-StartX)>50 or abs(y-StartY)>50:
+                if abs(x-StartX)>minMoveDistance or abs(y-StartY)>minMoveDistance:
                     shots = shots + 1
                     isMoving = False 
                     StartX = x
@@ -269,6 +248,26 @@ def draw_keypoints(image,  # -- Input image
 
     return (im_with_keypoints)
  
+
+def calculateShots(x,y):
+    #Lav array af positioner Man laver altid numpy array med korrekt størrelse(np.zero([n_frames])) udenfor for loop og "appender" med Array[Indeks], hvor Indeks f.eks er frame number. Np.append er mega langsom. Selv i real tid skal man bare allokere et stort array i hukommelsen, f.eks hvert minut
+    global posX, posY
+    posX.append(x)
+    posY.append(y)
+
+    # før du laver gradient på x og y array skal du lige bruge scipy filter for at fjerne outliers
+
+    # gør position smooth
+    #antal_frames = 11  # hvor mange frames der smoothes over
+    #dfX = savgol_filter(posX, antal_frames, 4)
+    #dfY = savgol_filter(posY, antal_frames, 4)
+
+    # Lav gradient
+    #V_x = np.gradient(dfX)
+    #V_y = np.gradient(dfY)
+
+
+
 
 # ---------- Draw search window: returns the image
 # -- return(image)
@@ -320,41 +319,14 @@ def draw_frame(image,
 
 # ---------- Apply search window: returns the image
 # -- return(image)
-
-def apply_search_window(image,window_adim=[0.0, 0.0, 1.0, 1.0]):
+def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
     rows = image.shape[0]
     cols = image.shape[1]
-    
-#     im_with_keypoints = cv2.drawKeypoints(image, np.array([]), line_color,
-#                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    
-    global toggleFirkant
-    print(x)
-    if StartX==900 and StartY==650 and toggleFirkant == False:
-        toggleFirkant = True
-        searchMinX = round(StartX-50)
-        searchMinY = round(StartY-50)
-        searchMaxX = round(StartX+50)
-        searchMaxY = round(StartY+50)
-    else:
-        searchMinX = round(prevX-25)
-        searchMinY = round(prevY-25)
-        searchMaxX = round(prevX+25)
-        searchMaxY = round(prevY+25)
-        
-        
-        
-    
-    
-#     searchMinX = 70
-#     searchMinY = 500
-#     searchMaxX = 950
-#     searchMaxY = 700
-    
-    #searchMinX = 200
-    #searchMinY = 250
-    #searchMaxX = 1200
-    #searchMaxY = 600
+	#søger indefor dette areal
+    searchMinX = int(window_adim[0]*cols)
+    searchMinY = int(window_adim[1]*rows)
+    searchMaxX = int(window_adim[2]*cols)
+    searchMaxY = int(window_adim[3]*rows)
 
     x_min_px = searchMinX
     y_min_px = searchMinY
@@ -408,14 +380,12 @@ def get_blob_relative_position(image, keyPoint):
 # ----------- TEST
 if __name__ == "__main__":
     globals()
-
+    #hsv_min,  # -- minimum threshold of the hsv filter [h_min, s_min, v_min]
     # --- Define HSV limits
-    blue_min = (51, 93, 65)
-    blue_max = (58, 166, 124)
-    
-    # værdier der virker på video i vores lab
-    #blue_min = (0, 178, 145)
-    #blue_max = (183, 255, 255)
+    #blue_min = (0, 112, 126)
+    #blue_max = (27, 255, 255)
+    blue_min=(0,150,57)
+    blue_max = (33, 255, 255)
     #nye værdier
      #0,162,117
     #110,218,255
@@ -425,24 +395,20 @@ if __name__ == "__main__":
     #blue_max = (7, 255, 255)
 
     # --- Define area limit [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
-    window = [0, 0, 1, 1]
+    window = [0, 0.5, 1, 1]
 
     # -- IMAGE_SOURCE: either 'camera' or 'imagelist'
     # SOURCE = 'video'
     SOURCE = 'video'
 
     if SOURCE == 'video':
-        #den der virker i vores "lab"
-        #cap = cv2.VideoCapture("nyVideoMedStilleKamera.mov") 
-        cap = cv2.VideoCapture("NormaltForsøg1.mp4")
+								#"nyVideoMedStilleKamera.mov"
+        cap = cv2.VideoCapture(0)
         while (True):
             # Capture frame-by-frame
             ret, frame = cap.read()
 
-            
-            frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*1.5),int(frame.shape[0]*1.5)))
-            #den der virker på den gamle video
-            #frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*90/100),int(frame.shape[0]*90/100)))
+            frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*90/100),int(frame.shape[0]*90/100)))
 
             # -- Detect keypoints
             keypoints, _ = blob_detect(frameResize, blue_min, blue_max, blur=3,
