@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 import keyboard
 
-#adasasdas
-
 x=0
 y=0
 
@@ -161,9 +159,7 @@ def draw_keypoints(image,  # -- Input image
     if keypoints:
         x = keypoints[0].pt[0]
         y = keypoints[0].pt[1]
-        calculateShots(x,y)
-    else:
-        calculateShots(x, y)
+
 
     #Her regnes deltaTime og prevFrameTime bliver sat
     currentTime = time.time()
@@ -212,9 +208,6 @@ def draw_keypoints(image,  # -- Input image
     
     if 1.5<speed < 20:
             isMoving = True
-            
-            
-    
         
             #Behøves speed!= 0? her tjekkes om bolden er inden for rammerne og speed er under 1
     if speed < 1 and isMoving and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
@@ -224,62 +217,35 @@ def draw_keypoints(image,  # -- Input image
             if keypoints:
                 x = keypoints[0].pt[0]
                 y = keypoints[0].pt[1]
-                print("x:"+str(x))
-                print("y:"+str(y))
-                #calculateShots(x,y)
-                #vector3 and magnitude
-                if abs(x-StartX)>minMoveDistance or abs(y-StartY)>minMoveDistance:
+                #her bruger vi magnitude til at lave en cirkel rundt om boldens sidste position.
+                #Hvis bolden kommer ud over den cirkel, så tæller den et nyt skud
+                magnitude = math.sqrt((StartX - x) ** 2 + (StartY - y) ** 2)
+                if magnitude>minMoveDistance:
                     shots = shots + 1
                     isMoving = False 
                     StartX = x
                     StartY = y
                 else:
                     isMoving = False
-                     # calculateShots(x, y)
            
-              
-                
-        
-    #Ydre kasseslut    
-        
+        #den viser den nuværende fram i videon vi ser
     if imshow:
         # Show keypoints
         cv2.imshow("Keypoints", im_with_keypoints)
-
     return (im_with_keypoints)
  
-
-def calculateShots(x,y):
-    #Lav array af positioner Man laver altid numpy array med korrekt størrelse(np.zero([n_frames])) udenfor for loop og "appender" med Array[Indeks], hvor Indeks f.eks er frame number. Np.append er mega langsom. Selv i real tid skal man bare allokere et stort array i hukommelsen, f.eks hvert minut
-    global posX, posY
-    posX.append(x)
-    posY.append(y)
-
-    # før du laver gradient på x og y array skal du lige bruge scipy filter for at fjerne outliers
-
-    # gør position smooth
-    #antal_frames = 11  # hvor mange frames der smoothes over
-    #dfX = savgol_filter(posX, antal_frames, 4)
-    #dfY = savgol_filter(posY, antal_frames, 4)
-
-    # Lav gradient
-    #V_x = np.gradient(dfX)
-    #V_y = np.gradient(dfY)
-
-
-
-
 # ---------- Draw search window: returns the image
 # -- return(image)
+#den tegner vores mask, så vi visuelt kan se hvilket felt vi søger inden for.
 def draw_window(image,  # - Input image
                 window_adim,  # - window in adimensional units
-                color=(255, 0, 0),  # - line's color
+                color=(0, 255, 0),  # - line's color
                 line=5,  # - line's thickness
                 imshow=False  # - show the image
                 ):
     rows = image.shape[0]
     cols = image.shape[1]
-
+    #vinduet er sat nede i main og hedder window 
     x_min_px = int(cols * window_adim[0])
     y_min_px = int(rows * window_adim[1])
     x_max_px = int(cols * window_adim[2])
@@ -287,11 +253,6 @@ def draw_window(image,  # - Input image
 
     # -- Draw a rectangle from top left to bottom right corner
     image = cv2.rectangle(image, (x_min_px, y_min_px), (x_max_px, y_max_px), color, line)
-
-    if imshow:
-        # Show keypoints
-        cv2.imshow("Keypoints", image)
-
     return (image)
 
 # ---------- Apply search window: returns the image
