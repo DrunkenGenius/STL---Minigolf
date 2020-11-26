@@ -294,44 +294,17 @@ def draw_window(image,  # - Input image
 
     return (image)
 
-
-# ---------- Draw X Y frame
-# -- return(image)
-def draw_frame(image,
-               dimension=0.3,  # - dimension relative to frame size
-               line=2  # - line's thickness
-               ):
-    rows = image.shape[0]
-    cols = image.shape[1]
-    size = min([rows, cols])
-    center_x = int(cols / 2.0)
-    center_y = int(rows / 2.0)
-
-    line_length = int(size * dimension)
-
-    # -- X
-    image = cv2.line(image, (center_x, center_y), (center_x + line_length, center_y), (0, 0, 255), line)
-    # -- Y
-    image = cv2.line(image, (center_x, center_y), (center_x, center_y + line_length), (0, 255, 0), line)
-
-    return (image)
-
-
 # ---------- Apply search window: returns the image
 # -- return(image)
+#funktionen gør at vi ikke søger i det modsatte område af hvad vi angiver i "window"
 def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
     rows = image.shape[0]
     cols = image.shape[1]
 	#søger indefor dette areal
-    searchMinX = int(window_adim[0]*cols)
-    searchMinY = int(window_adim[1]*rows)
-    searchMaxX = int(window_adim[2]*cols)
-    searchMaxY = int(window_adim[3]*rows)
-
-    x_min_px = searchMinX
-    y_min_px = searchMinY
-    x_max_px = searchMaxX
-    y_max_px = searchMaxY
+    x_min_px = int(window_adim[0]*cols)
+    y_min_px = int(window_adim[1]*rows)
+    x_max_px = int(window_adim[2]*cols)
+    y_max_px = int(window_adim[3]*rows)
 
     # --- Initialize the mask as a black image
     mask = np.zeros(image.shape, np.uint8)
@@ -342,59 +315,19 @@ def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
     # --- return the mask
     return (mask)
 
-
-# ---------- Apply a blur to the outside search region
-# -- return(image)
-def blur_outside(image, blur=5, window_adim=[0.0, 0.0, 1.0, 1.0]):
-    rows = image.shape[0]
-    cols = image.shape[1]
-    x_min_px = int(cols * window_adim[0])
-    y_min_px = int(rows * window_adim[1])
-    x_max_px = int(cols * window_adim[2])
-    y_max_px = int(rows * window_adim[3])
-
-    # --- Initialize the mask as a black image
-    mask = cv2.blur(image, (blur, blur))
-
-    # --- Copy the pixels from the original image corresponding to the window
-    mask[y_min_px:y_max_px, x_min_px:x_max_px] = image[y_min_px:y_max_px, x_min_px:x_max_px]
-
-    # --- return the mask
-    return (mask)
-
-
-# ---------- Obtain the camera relative frame coordinate of one single keypoint
-# -- return(x,y)
-def get_blob_relative_position(image, keyPoint):
-    rows = float(image.shape[0])
-    cols = float(image.shape[1])
-    # print(rows, cols)
-    center_x = 0.5 * cols
-    center_y = 0.5 * rows
-    # print(center_x)
-    x = (keyPoint.pt[0] - center_x) / (center_x)
-    y = (keyPoint.pt[1] - center_y) / (center_y)
-    return (x, y)
-
-
-# ----------- TEST
+#Den kører denne if sætning, fordi det er det her program vi kører. Havde vi impoteret denne fil, så ville den ikke køre nedestående kode
 if __name__ == "__main__":
     globals()
     #hsv_min,  # -- minimum threshold of the hsv filter [h_min, s_min, v_min]
     # --- Define HSV limits
-    #blue_min = (0, 112, 126)
-    #blue_max = (27, 255, 255)
-    blue_min=(0,150,57)
-    blue_max = (33, 255, 255)
-    #nye værdier
-     #0,162,117
-    #110,218,255
-    
-    #De gamle værdier til den gamle video
-    #blue_min = (0, 173, 171)
-    #blue_max = (7, 255, 255)
+    #Her skal man sætte sine parametre man har fra rangedetectoren.
+    #koden for at køre rangedetectoren er: python range-detector.py --image forsog1MedLys.png --filter HSV --preview
+    red_min=(0,150,57)
+    red_max=(33,255,255)
+   
 
     # --- Define area limit [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
+    #Her sætter vi det vindue vi gerne vil søge inden for
     window = [0, 0.5, 1, 1]
 
     # -- IMAGE_SOURCE: either 'camera' or 'imagelist'
@@ -403,7 +336,7 @@ if __name__ == "__main__":
 
     if SOURCE == 'video':
 								#"nyVideoMedStilleKamera.mov"
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture("Bane1.avi")
         while (True):
             # Capture frame-by-frame
             ret, frame = cap.read()
@@ -411,7 +344,7 @@ if __name__ == "__main__":
             frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*90/100),int(frame.shape[0]*90/100)))
 
             # -- Detect keypoints
-            keypoints, _ = blob_detect(frameResize, blue_min, blue_max, blur=3,
+            keypoints, _ = blob_detect(frameResize, red_min, red_max, blur=3,
                                        blob_params=None, search_window=window, imshow=False)
             # -- Draw search window
             frameResize = draw_window(frameResize, window)
@@ -422,33 +355,6 @@ if __name__ == "__main__":
             # -- press q to quit
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+cv2.destroyAllWindows()
 
-    else:
-        # -- Read image list from file:
-        image_list = []
-        image_list.append(cv2.imread("golf.JPG"))
-        # image_list.append(cv2.imread("blob2.jpg"))
-        # image_list.append(cv2.imread("blob3.jpg"))
-
-        for image in image_list:
-            # -- Detect keypoints
-            keypoints, _ = blob_detect(image, blue_min, blue_max, blur=5,
-                                       blob_params=None, search_window=window, imshow=True)
-
-            image = blur_outside(image, blur=15, window_adim=window)
-            cv2.imshow("Outside Blur", image)
-            cv2.waitKey(0)
-
-            image = draw_window(image, window, imshow=True)
-            # -- enter to proceed
-            cv2.waitKey(0)
-
-            # -- click ENTER on the image window to proceed
-            image = draw_keypoints(image, keypoints, imshow=True)
-            cv2.waitKey(0)
-            # -- Draw search window
-
-            image = draw_frame(image)
-            cv2.imshow("Frame", image)
-            cv2.waitKey(0)
 
