@@ -50,8 +50,10 @@ def blob_detect(image,  # -- The frame (cv standard)
     # - Show HSV Mask
     if imshow:
         cv2.imshow("HSV Mask", mask)
+        cv2.waitKey(0)
 
     # - dilate makes the in range areas larger
+    #Det udvider det som er inde i HSV-filteret, iterations betyder at den gør det 2 gange
     mask = cv2.dilate(mask, None, iterations=2)
     # - Show HSV Mask
     if imshow:
@@ -61,6 +63,7 @@ def blob_detect(image,  # -- The frame (cv standard)
     mask = cv2.erode(mask, None, iterations=2)
 
     # - Show dilate/erode mask
+    #Gør det modsatte af dilate
     if imshow:
         cv2.imshow("Erode Mask", mask)
         cv2.waitKey(0)
@@ -75,6 +78,7 @@ def blob_detect(image,  # -- The frame (cv standard)
     # - build default blob detection parameters, if none have been provided
     if blob_params is None:
         # Set up the SimpleBlobdetector with default parameters.
+        #opretter en object med default parametre. Pointen er her at vi så kan ændre i værdierne, så det passer til vores video.
         params = cv2.SimpleBlobDetector_Params()
 
         # Change thresholds
@@ -113,7 +117,7 @@ def blob_detect(image,  # -- The frame (cv standard)
 
     keypoints = detector.detect(reversemask)
 
-    return keypoints, reversemask
+    return keypoints
 
 # ---------- Draw detected blobs: returns the image
 # -- return(im_with_keypoints)
@@ -255,7 +259,6 @@ def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
 
 #Den kører denne if sætning, fordi det er det her program vi kører. Havde vi impoteret denne fil, så ville den ikke køre nedestående kode
 if __name__ == "__main__":
-    globals()
     #hsv_min,  # -- minimum threshold of the hsv filter [h_min, s_min, v_min]
     # --- Define HSV limits
     #Her skal man sætte sine parametre man har fra rangedetectoren.
@@ -276,12 +279,15 @@ if __name__ == "__main__":
         cap = cv2.VideoCapture("Bane1.avi")
         while (True):
             # Capture frame-by-frame
+            # ret er en bool der siger om noget er returned
             ret, frame = cap.read()
 
+            #
             frameResize = cv2.resize(frame, dsize=(int(frame.shape[1]*90/100),int(frame.shape[0]*90/100)))
 
             # -- Detect keypoints
-            keypoints, _ = blob_detect(frameResize, red_min, red_max, blur=3,
+            #Blur parameteren kan ændres og har stor betydning for hvordan vi finder bolden, man kan ændre i denne værdi for at finde det billede der tracker bolden bedst
+            keypoints= blob_detect(frameResize, red_min, red_max, blur=3,
                                        blob_params=None, search_window=window, imshow=False)
             # -- Draw search window
             frameResize = draw_window(frameResize, window)
