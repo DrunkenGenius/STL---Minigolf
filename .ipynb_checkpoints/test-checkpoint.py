@@ -1,6 +1,5 @@
 import cv2
 import numpy as np;
-import time
 import math
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
@@ -8,25 +7,17 @@ import keyboard
 
 x=0
 y=0
-
 prevX=0
 prevY=0
 StartX=229
 StartY=418
-
-prevFrameTime = time.time()
-currentTime = 0
-
 posX = []
 posY = []
-
 isMoving = False
 shots = 0
 OB = False
-
+#Bruges ikke, men kan bruges til at lave en graf og finde outliers
 maxVel = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-
-
 
 # ---------- Blob detecting function: returns keypoints and mask
 # -- return keypoints, reversemask
@@ -124,7 +115,6 @@ def blob_detect(image,  # -- The frame (cv standard)
 
     return keypoints, reversemask
 
-
 # ---------- Draw detected blobs: returns the image
 # -- return(im_with_keypoints)
 def draw_keypoints(image,  # -- Input image
@@ -139,64 +129,52 @@ def draw_keypoints(image,  # -- Input image
     #Til at beregne velocity
     global x,y
     global prevX, prevY
-    #Til at beregne tid siden foregående frame altså deltaTime
-    global prevFrameTime
-    global currentTime
-
     global isMoving
     global shots
     global OB
     global StartX 
     global StartY 
-
     global maxVel
-    
     minMoveDistance = 20
     
-
-
     #Sætter keypoints positions hvis der er nogen keypoints(altså den har detected en blob)
     if keypoints:
         x = keypoints[0].pt[0]
         y = keypoints[0].pt[1]
 
-
-    #Her regnes deltaTime og prevFrameTime bliver sat
-    currentTime = time.time()
-    deltaTime = currentTime - prevFrameTime
-    prevFrameTime = currentTime
-
     #Her regnes distancen blob har bevæget sig siden forrige frame
     speed = math.sqrt((prevX - x) ** 2 + (prevY - y) ** 2)
+    #Her vil vi prøve at lave en kurve, så vi fjerner outliers
     np.append(maxVel, speed)
     maxVel = savgol_filter(maxVel, 11, 4)
     prevX, prevY = x,y
 
-    #Start og slutpunkt for mål rektanglet på banen
+    #Start og slutpunkt for mål rektanglet på banen.
+    #Skal sættes til det nuværende billede, da det pt. er uden for billedet
     goalStartX, goalStartY = 1050,370
     goalEndX, goalEndY =1100, 420
     #Tekst med position og velocity af bold
-    string = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(round(speed,2))
-    cv2.putText(im_with_keypoints, string, (50,300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 2, cv2.LINE_AA)
+    position = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(round(speed,2))
+    cv2.putText(im_with_keypoints, position, (50,300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 2, cv2.LINE_AA)
     cv2.putText(im_with_keypoints, "Shots: " +  str(shots), (50, 250), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2, cv2.LINE_AA)
     cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
     #Hvis bolden er i målkassen
+    #Dette ville skulle bruges for at registrere at bolden er i hul og at den person der spiller er færdig.
     if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
         print("GOAL YAY")
     
-    # grøn firkant der viser hvor det detektes    searchMinX = 0
-    
     #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB(Out of Bounds) med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
+#kan bruges hvis man vil vise OB kassen
     ydreStartX, ydreStartY = 10,10
-    #ydreEndX værdi == 1000, hvis man vil teste OB
+#     #ydreEndX værdi == 1000, hvis man vil teste OB
     ydreEndX, ydreEndY =1260, 700
-    cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
+#     cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
     
-        
     if keyboard.is_pressed('r'):
         shots = 0
         
         #Virker ikke som det skal, den detecter pludseligt random ting uden for grænsen... tror dog stadigvæk ideen virker:"gradient" skal bare virke først
+        #problemet er lige nu at der er outliers
     #if (x<ydreStartX or ydreEndX<x or y<ydreStartY or ydreEndY<y) and OB == False:
        # print("OB")
         #OB = True
@@ -209,7 +187,6 @@ def draw_keypoints(image,  # -- Input image
     if 1.5<speed < 20:
             isMoving = True
         
-            #Behøves speed!= 0? her tjekkes om bolden er inden for rammerne og speed er under 1
     if speed < 1 and isMoving and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
             print("In Bounds")
             OB = False
@@ -285,7 +262,6 @@ if __name__ == "__main__":
     #koden for at køre rangedetectoren er: python range-detector.py --image forsog1MedLys.png --filter HSV --preview
     red_min=(0,150,57)
     red_max=(33,255,255)
-   
 
     # --- Define area limit [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
     #Her sætter vi det vindue vi gerne vil søge inden for
