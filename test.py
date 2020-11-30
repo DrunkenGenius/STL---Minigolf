@@ -1,7 +1,6 @@
 import cv2
 import numpy as np;
 import math
-import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 import keyboard
 
@@ -147,25 +146,19 @@ def draw_keypoints(image,  # -- Input image
         y = keypoints[0].pt[1]
 
     #Her regnes distancen blob har bevæget sig siden forrige frame
-    speed = math.sqrt((prevX - x) ** 2 + (prevY - y) ** 2)
+    #calcMagnitude kalkulerer magnitude for to punkter.
+    speed = calcMagnitude(prevX, prevY, x, y)
     #Her vil vi prøve at lave en kurve, så vi fjerner outliers
     np.append(maxVel, speed)
     maxVel = savgol_filter(maxVel, 11, 4)
     prevX, prevY = x,y
 
-    #Start og slutpunkt for mål rektanglet på banen.
-    #Skal sættes til det nuværende billede, da det pt. er uden for billedet
-    goalStartX, goalStartY = 1050,370
-    goalEndX, goalEndY =1100, 420
-    #Tekst med position og velocity af bold
-    position = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: "+str(round(speed,2))
-    cv2.putText(im_with_keypoints, position, (50,300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 2, cv2.LINE_AA)
-    cv2.putText(im_with_keypoints, "Shots: " +  str(shots), (50, 250), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2, cv2.LINE_AA)
-    cv2.rectangle(im_with_keypoints,(goalStartX,goalStartY),(goalEndX,goalEndY), (255,0,0), 2)
-    #Hvis bolden er i målkassen
-    #Dette ville skulle bruges for at registrere at bolden er i hul og at den person der spiller er færdig.
-    if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
-        print("GOAL YAY")
+    printInfo(im_with_keypoints, shots, speed, x, y)
+
+    goalStartX, goalStartY = 490, 335
+    goalEndX, goalEndY = goalStartX + 20, goalStartY + 20
+    #Laver mål ramme og sørger for hvad der skal ske hvis der er mål i funktionen handleGoal()
+    createGoal(im_with_keypoints,goalStartX, goalStartY, goalEndX, goalEndY,x, y)
     
     #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB(Out of Bounds) med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
 #kan bruges hvis man vil vise OB kassen
@@ -173,7 +166,7 @@ def draw_keypoints(image,  # -- Input image
 #     #ydreEndX værdi == 1000, hvis man vil teste OB
     ydreEndX, ydreEndY =1260, 700
 #     cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
-    
+
     if keyboard.is_pressed('r'):
         shots = 0
         
@@ -200,7 +193,7 @@ def draw_keypoints(image,  # -- Input image
                 y = keypoints[0].pt[1]
                 #her bruger vi magnitude til at lave en cirkel rundt om boldens sidste position.
                 #Hvis bolden kommer ud over den cirkel, så tæller den et nyt skud
-                magnitude = math.sqrt((StartX - x) ** 2 + (StartY - y) ** 2)
+                magnitude = calcMagnitude(StartX, StartY, x, y)
                 if magnitude>minMoveDistance:
                     shots = shots + 1
                     isMoving = False 
@@ -214,7 +207,35 @@ def draw_keypoints(image,  # -- Input image
         # Show keypoints
         cv2.imshow("Keypoints", im_with_keypoints)
     return (im_with_keypoints)
- 
+
+
+def printInfo(im_with_keypoints, shots, speed, x, y):
+    # Tekst med position og velocity af bold
+    position = "x: " + str(int(x)) + " - y: " + str(int(y)) + " - velocity: " + str(round(speed, 2))
+    cv2.putText(im_with_keypoints, position, (50, 300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2, cv2.LINE_AA)
+    cv2.putText(im_with_keypoints, "Shots: " + str(shots), (50, 250), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2,
+                cv2.LINE_AA)
+
+
+def calcMagnitude(StartX, StartY, x, y):
+    #Pythagoras for at finde længden mellem to punkter
+    return math.sqrt((StartX - x) ** 2 + (StartY - y) ** 2)
+
+def createGoal(im_with_keypoints, goalStartX, goalStartY, goalEndX, goalEndY, x,y):
+    # Start og slutpunkt for mål rektanglet på banen.
+    # Skal sættes til det nuværende billede, da det pt. er uden for billedet
+    cv2.rectangle(im_with_keypoints, (goalStartX, goalStartY), (goalEndX, goalEndY), (255, 0, 0), 2)
+
+    if goalStartX < x < goalEndX and goalStartY < y < goalEndY:
+        handleGoal()
+
+
+def handleGoal():
+    # Hvis bolden er i målkassen
+    # Dette ville skulle bruges for at registrere at bolden er i hul og at den person der spiller er færdig.
+    print("GOAL YAY")
+
+
 # ---------- Draw search window: returns the image
 # -- return(image)
 #den tegner vores mask, så vi visuelt kan se hvilket felt vi søger inden for.
