@@ -129,84 +129,88 @@ def draw_keypoints(image,  # -- Input image
     # -- cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
     im_with_keypoints = cv2.drawKeypoints(image, keypoints, np.array([]), line_color,
                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    #Til at beregne velocity
-    global x,y
-    global prevX, prevY
-    global isMoving
-    global shots
-    global OB
-    global StartX 
-    global StartY 
-    global maxVel
-    minMoveDistance = 20
-    
-    #Sætter keypoints positions hvis der er nogen keypoints(altså den har detected en blob)
-    if keypoints:
-        x = keypoints[0].pt[0]
-        y = keypoints[0].pt[1]
 
-    #Her regnes distancen blob har bevæget sig siden forrige frame
-    #calcMagnitude kalkulerer magnitude for to punkter.
-    speed = calcMagnitude(prevX, prevY, x, y)
-    #Her vil vi prøve at lave en kurve, så vi fjerner outliers
-    np.append(maxVel, speed)
-    maxVel = savgol_filter(maxVel, 11, 4)
-    prevX, prevY = x,y
+    calculate_shots(im_with_keypoints, keypoints)
 
-    printInfo(im_with_keypoints, shots, speed, x, y)
-
-    goalStartX, goalStartY = 490, 335
-    goalEndX, goalEndY = goalStartX + 20, goalStartY + 20
-    #Laver mål ramme og sørger for hvad der skal ske hvis der er mål i funktionen handleGoal()
-    createGoal(im_with_keypoints,goalStartX, goalStartY, goalEndX, goalEndY,x, y)
-    
-    #Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB(Out of Bounds) med en nuværende goalStartY på 250, som er lige på kanten, ryger den ikke OB, når den rammer stregen.
-#kan bruges hvis man vil vise OB kassen
-    ydreStartX, ydreStartY = 10,10
-#     #ydreEndX værdi == 1000, hvis man vil teste OB
-    ydreEndX, ydreEndY =1260, 700
-#     cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
-
-    if keyboard.is_pressed('r'):
-        shots = 0
-        
-        #Virker ikke som det skal, den detecter pludseligt random ting uden for grænsen... tror dog stadigvæk ideen virker:"gradient" skal bare virke først
-        #problemet er lige nu at der er outliers
-    #if (x<ydreStartX or ydreEndX<x or y<ydreStartY or ydreEndY<y) and OB == False:
-       # print("OB")
-        #OB = True
-        #shots = shots +2
-        
-    #if ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
-     #   print("In Bounds")
-      #  OB = False
-    
-    if 1.5<speed < 20:
-            isMoving = True
-        
-    if speed < 1 and isMoving and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
-            print("In Bounds")
-            OB = False
-            #finder forige gange den lå stille og trækker det fra dens nuværende position, hvis den har flyttet sig mere end "x"px, så skal den tælle det som et skud
-            if keypoints:
-                x = keypoints[0].pt[0]
-                y = keypoints[0].pt[1]
-                #her bruger vi magnitude til at lave en cirkel rundt om boldens sidste position.
-                #Hvis bolden kommer ud over den cirkel, så tæller den et nyt skud
-                magnitude = calcMagnitude(StartX, StartY, x, y)
-                if magnitude>minMoveDistance:
-                    shots = shots + 1
-                    isMoving = False 
-                    StartX = x
-                    StartY = y
-                else:
-                    isMoving = False
-           
-        #den viser den nuværende fram i videon vi ser
+    #den viser den nuværende fram i videon vi ser
     if imshow:
         # Show keypoints
         cv2.imshow("Keypoints", im_with_keypoints)
     return (im_with_keypoints)
+
+
+def calculate_shots(im_with_keypoints, keypoints):
+    # Til at beregne velocity
+    global x, y, prevX, prevY, isMoving, shots, OB, StartX, StartY, maxVel
+    #Parametre
+    minMoveDistance = 20
+    goalStartX, goalStartY = 490, 335
+    goalEndX, goalEndY = goalStartX + 20, goalStartY + 20
+
+    # Sætter keypoints positions hvis der er nogen keypoints(altså den har detected en blob)
+    if keypoints:
+        x = keypoints[0].pt[0]
+        y = keypoints[0].pt[1]
+
+    # calcMagnitude kalkulerer magnitude for to punkter.
+    speed = calcMagnitude(prevX, prevY, x, y)
+
+    # Her vil vi prøve at lave en kurve, så vi fjerner outliers
+    #GØR IKKE NOGET PT
+    np.append(maxVel, speed)
+    maxVel = savgol_filter(maxVel, 11, 4)
+    prevX, prevY = x, y
+
+    # Laver mål ramme og sørger for hvad der skal ske hvis der er mål i funktionen handleGoal()
+    createGoal(im_with_keypoints, goalStartX, goalStartY, goalEndX, goalEndY, x, y)
+
+    # Ydre kasse. Kassen er meget præcis og ser ud til at bolden skal forbi stregen før at det registreres som OB(Out of Bounds)
+    ydreStartX, ydreStartY = 10, 10
+    #ydreEndX værdi == 1000, hvis man vil teste OB
+    ydreEndX, ydreEndY = 1260, 700
+
+    #Viser out of bounds kassen
+    #cv2.rectangle(im_with_keypoints,(ydreStartX,ydreStartY),(ydreEndX,ydreEndY), (0,255,0), 2)
+
+    if keyboard.is_pressed('r'):
+        shots = 0
+
+    check_OB()
+
+    if 1.5 < speed < 20:
+        isMoving = True
+    if speed < 1 and isMoving and ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
+        print("In Bounds")
+        OB = False
+        # finder forige gange den lå stille og trækker det fra dens nuværende position, hvis den har flyttet sig mere end "x"px, så skal den tælle det som et skud
+        if keypoints:
+            x = keypoints[0].pt[0]
+            y = keypoints[0].pt[1]
+            # her bruger vi magnitude til at lave en cirkel rundt om boldens sidste position.
+            # Hvis bolden kommer ud over den cirkel, så tæller den et nyt skud
+            magnitude = calcMagnitude(StartX, StartY, x, y)
+            if magnitude > minMoveDistance:
+                shots = shots + 1
+                isMoving = False
+                StartX = x
+                StartY = y
+            else:
+                isMoving = False
+
+    printInfo(im_with_keypoints, shots, speed, x, y)
+
+
+def check_OB():
+    pass
+    # Virker ikke som det skal, den detecter pludseligt random ting uden for grænsen... tror dog stadigvæk ideen virker:"gradient" skal bare virke først
+    # problemet er lige nu at der er outliers
+    # if (x<ydreStartX or ydreEndX<x or y<ydreStartY or ydreEndY<y) and OB == False:
+    # print("OB")
+    # OB = True
+    # shots = shots +2
+    # if ydreStartX < x < ydreEndX and ydreStartY < y < ydreEndY:
+    # print("In Bounds")
+    # OB = False
 
 
 def printInfo(im_with_keypoints, shots, speed, x, y):
