@@ -3,7 +3,9 @@ import numpy as np;
 import math
 from scipy.signal import savgol_filter
 import keyboard
+import time
 
+#Global Variables
 x=0
 y=0
 prevX=0
@@ -15,8 +17,10 @@ posY = []
 isMoving = False
 shots = 0
 OB = False
+score = 0
 #Bruges ikke, men kan bruges til at lave en graf og finde outliers
 maxVel = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+goalReset = False
 
 # ---------- Blob detecting function: returns keypoints and mask
 # -- return keypoints, reversemask
@@ -141,7 +145,7 @@ def draw_keypoints(image,  # -- Input image
 
 def calculate_shots(im_with_keypoints, keypoints):
     # Til at beregne velocity
-    global x, y, prevX, prevY, isMoving, shots, OB, StartX, StartY, maxVel
+    global x, y, prevX, prevY, isMoving, shots, OB, StartX, StartY, maxVel, goalReset
     #Parametre
     minMoveDistance = 20
     goalStartX, goalStartY = 490, 335
@@ -219,6 +223,8 @@ def printInfo(im_with_keypoints, shots, speed, x, y):
     cv2.putText(im_with_keypoints, position, (50, 300), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2, cv2.LINE_AA)
     cv2.putText(im_with_keypoints, "Shots: " + str(shots), (50, 250), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2,
                 cv2.LINE_AA)
+    #cv2.putText(im_with_keypoints, "Score: " + str(score), (50, 275), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 0), 2,
+    #            cv2.LINE_AA)
 
 
 def calcMagnitude(StartX, StartY, x, y):
@@ -235,9 +241,22 @@ def createGoal(im_with_keypoints, goalStartX, goalStartY, goalEndX, goalEndY, x,
 
 
 def handleGoal():
+    global shots, score
     # Hvis bolden er i målkassen
     # Dette ville skulle bruges for at registrere at bolden er i hul og at den person der spiller er færdig.
-    print("GOAL YAY")
+    shotPlusOne = shots + 1
+    if shotPlusOne ==1:
+        score = 1000
+    if shotPlusOne ==2:
+        score = 800
+    if shotPlusOne == 3:
+        score = 600
+    if shotPlusOne ==4:
+        score = 400
+    if shotPlusOne ==5:
+        score = 200
+    if shotPlusOne ==6:
+        score = 100
 
 
 # ---------- Draw search window: returns the image
@@ -291,6 +310,7 @@ if __name__ == "__main__":
     red_min=(0,150,57)
     red_max=(33,255,255)
 
+
     # --- Define area limit [x_min, y_min, x_max, y_max] adimensional (0.0 to 1.0) starting from top left corner
     #Her sætter vi det vindue vi gerne vil søge inden for
     window = [0, 0.5, 1, 1]
@@ -319,7 +339,7 @@ if __name__ == "__main__":
 
             # -- click ENTER on the image window to proceed
             draw_keypoints(frameResize, keypoints, imshow=True)
-
+            time.sleep(0.025)
             # -- press q to quit
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
